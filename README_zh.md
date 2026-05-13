@@ -260,6 +260,28 @@ docker-compose run --rm horizon --hours 48   # 抓取最近 48 小时的内容
 
 生成的日报将保存在 `data/summaries/` 目录中。
 
+#### 导出到见微
+
+如果要把 Horizon 抓取和 AI 分析后的真实数据导入 `jianwei_web`，可以运行：
+
+```bash
+uv run horizon-jianwei --persona-slug indie-maker --hours 24 --limit 20
+```
+
+命令会读取 `data/config.json` 中配置的信息源，执行抓取和 AI 打分，然后把见微可导入的 JSON 文件输出到：
+
+```text
+data/jianwei_artifacts/YYYY-MM-DD/indie-maker/
+```
+
+随后在 `jianwei_web` 项目中执行导入：
+
+```bash
+./bin/import_artifacts.sh ../Horizon/data/jianwei_artifacts/YYYY-MM-DD/indie-maker
+```
+
+其中 `YYYY-MM-DD` 替换为实际日期。
+
 ### 4. 自动化（可选）
 
 Horizon 非常适合作为 **GitHub Actions** 定时任务运行。查看 [`.github/workflows/daily-summary.yml`](.github/workflows/daily-summary.yml) 获取现成的工作流配置，可自动生成日报并部署到 GitHub Pages。

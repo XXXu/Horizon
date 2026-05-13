@@ -104,6 +104,7 @@ class RSSScraper(BaseScraper):
                     published_at=published_at,
                     metadata={
                         "feed_name": source.name,
+                        "feed_url": str(source.url),
                         "category": source.category,
                         "tags": [tag.term for tag in entry.get("tags", [])],
                     }
