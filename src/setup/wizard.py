@@ -14,7 +14,7 @@ from ..models import (
     AIConfig, AIProvider, Config, FilteringConfig, SourcesConfig,
     GitHubSourceConfig, HackerNewsConfig, RSSSourceConfig,
     RedditConfig, RedditSubredditConfig, RedditUserConfig,
-    TelegramConfig, TelegramChannelConfig, V2EXConfig,
+    TelegramConfig, TelegramChannelConfig, V2EXConfig, CnTechConfig,
 )
 from ..storage.manager import StorageManager
 from .presets import load_presets, match_sources
@@ -200,6 +200,7 @@ def build_config(
     reddit_users = []
     telegram_channels = []
     v2ex_nodes = []
+    cn_tech_sources = []
 
     for src in selected_sources:
         src_type = src.get("type", "")
@@ -243,6 +244,8 @@ def build_config(
             ))
         elif src_type == "v2ex":
             v2ex_nodes.extend(cfg.get("nodes", []))
+        elif src_type == "cn_tech":
+            cn_tech_sources.extend(cfg.get("sources", []))
 
     # Always include HackerNews as a universal source
     hn_config = HackerNewsConfig(
@@ -268,10 +271,16 @@ def build_config(
         nodes=v2ex_nodes or V2EXConfig().nodes,
     )
 
+    cn_tech_config = CnTechConfig(
+        enabled=bool(cn_tech_sources),
+        sources=cn_tech_sources or CnTechConfig().sources,
+    )
+
     sources = SourcesConfig(
         github=github_sources,
         hackernews=hn_config,
         v2ex=v2ex_config,
+        cn_tech=cn_tech_config,
         rss=rss_sources,
         reddit=reddit_config,
         telegram=telegram_config,
@@ -345,6 +354,16 @@ def merge_configs(new_config: Config, existing_config: Config) -> Config:
     merged_nodes = list(dict.fromkeys([*merged.sources.v2ex.nodes, *existing_v2ex_nodes]))
     merged.sources.v2ex.nodes = merged_nodes
     merged.sources.v2ex.enabled = merged.sources.v2ex.enabled or existing_config.sources.v2ex.enabled
+
+    # Merge domestic Chinese tech sources
+    existing_cn_tech_sources = list(existing_config.sources.cn_tech.sources or [])
+    merged_cn_tech_sources = list(
+        dict.fromkeys([*merged.sources.cn_tech.sources, *existing_cn_tech_sources])
+    )
+    merged.sources.cn_tech.sources = merged_cn_tech_sources
+    merged.sources.cn_tech.enabled = (
+        merged.sources.cn_tech.enabled or existing_config.sources.cn_tech.enabled
+    )
 
     return merged
 
@@ -452,6 +471,8 @@ def _count_sources(config: Config) -> int:
         count += 1
     if config.sources.v2ex.enabled:
         count += len(config.sources.v2ex.nodes or [])
+    if config.sources.cn_tech.enabled:
+        count += len(config.sources.cn_tech.sources or [])
     count += len([s for s in config.sources.rss if s.enabled])
     if config.sources.reddit.enabled:
         count += len(config.sources.reddit.subreddits or [])

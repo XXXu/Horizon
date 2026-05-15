@@ -83,6 +83,33 @@ def test_get_effective_config_accepts_v2ex_source_filter(tmp_path: Path) -> None
     assert result["config"]["sources"]["hackernews"]["enabled"] is False
 
 
+def test_get_effective_config_accepts_cn_tech_source_filter(tmp_path: Path) -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    config_path = tmp_path / "config.json"
+    payload = (repo_root / "data" / "config.example.json").read_text(encoding="utf-8")
+    config_path.write_text(payload, encoding="utf-8")
+
+    service = HorizonPipelineService(runs_root=tmp_path / "mcp-runs")
+    result = service.get_effective_config(
+        horizon_path=str(repo_root),
+        config_path=str(config_path),
+        sources=["cn_tech"],
+    )
+
+    assert result["selected_sources"] == ["cn_tech"]
+    assert result["config"]["sources"]["cn_tech"]["enabled"] is True
+    assert result["config"]["sources"]["cn_tech"]["sources"] == [
+        "36kr",
+        "infoq_cn",
+        "juejin",
+        "geekpark",
+        "qbitai",
+    ]
+    assert result["config"]["sources"]["github"] == []
+    assert result["config"]["sources"]["hackernews"]["enabled"] is False
+    assert result["config"]["sources"]["v2ex"]["enabled"] is False
+
+
 def test_metrics_tool_smoke() -> None:
     result = hz_get_metrics()
 

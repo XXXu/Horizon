@@ -14,6 +14,7 @@ from .services.email import EmailManager
 from .services.webhook import WebhookNotifier
 from .scrapers.github import GitHubScraper
 from .scrapers.hackernews import HackerNewsScraper
+from .scrapers.cn_tech import CnTechScraper
 from .scrapers.rss import RSSScraper
 from .scrapers.reddit import RedditScraper
 from .scrapers.telegram import TelegramScraper
@@ -252,6 +253,11 @@ class HorizonOrchestrator:
             if self.config.sources.v2ex.enabled:
                 v2ex_scraper = V2EXScraper(self.config.sources.v2ex, client)
                 tasks.append(self._fetch_with_progress("V2EX", v2ex_scraper, since))
+
+            # Domestic Chinese tech sources
+            if self.config.sources.cn_tech.enabled:
+                cn_tech_scraper = CnTechScraper(self.config.sources.cn_tech, client)
+                tasks.append(self._fetch_with_progress("CN Tech", cn_tech_scraper, since))
 
             # RSS feeds
             if self.config.sources.rss:

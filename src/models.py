@@ -15,6 +15,11 @@ class SourceType(str, Enum):
     TELEGRAM = "telegram"
     TWITTER = "twitter"
     V2EX = "v2ex"
+    KR36 = "36kr"
+    INFOQ_CN = "infoq_cn"
+    JUEJIN = "juejin"
+    GEEKPARK = "geekpark"
+    QBITAI = "qbitai"
 
 
 class ContentItem(BaseModel):
@@ -107,6 +112,16 @@ class V2EXConfig(BaseModel):
     min_replies: int = 0
 
 
+class CnTechConfig(BaseModel):
+    """Domestic Chinese tech source configuration."""
+
+    enabled: bool = True
+    sources: List[str] = Field(
+        default_factory=lambda: ["36kr", "infoq_cn", "juejin", "geekpark", "qbitai"]
+    )
+    fetch_limit: int = 20
+
+
 class RSSSourceConfig(BaseModel):
     """RSS feed source configuration."""
 
@@ -174,6 +189,7 @@ class SourcesConfig(BaseModel):
     github: List[GitHubSourceConfig] = Field(default_factory=list)
     hackernews: HackerNewsConfig = Field(default_factory=HackerNewsConfig)
     v2ex: V2EXConfig = Field(default_factory=V2EXConfig)
+    cn_tech: CnTechConfig = Field(default_factory=CnTechConfig)
     rss: List[RSSSourceConfig] = Field(default_factory=list)
     reddit: RedditConfig = Field(default_factory=RedditConfig)
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)

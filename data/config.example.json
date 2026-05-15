@@ -46,6 +46,11 @@
       "fetch_limit": 20,
       "min_replies": 0
     },
+    "cn_tech": {
+      "enabled": true,
+      "sources": ["36kr", "infoq_cn", "juejin", "geekpark", "qbitai"],
+      "fetch_limit": 20
+    },
     "rss": [
       {
         "name": "Simon Willison",
