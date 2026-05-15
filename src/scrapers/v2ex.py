@@ -59,8 +59,22 @@ class V2EXScraper(BaseScraper):
             response.raise_for_status()
             payload = response.json()
             return payload if isinstance(payload, list) else []
+        except httpx.HTTPStatusError as exc:
+            response_text = exc.response.text[:200].replace("\n", " ")
+            logger.warning(
+                "Error fetching V2EX node %s: status=%s body=%s",
+                node_name,
+                exc.response.status_code,
+                response_text,
+            )
+            return []
         except httpx.HTTPError as exc:
-            logger.warning("Error fetching V2EX node %s: %s", node_name, exc)
+            logger.warning(
+                "Error fetching V2EX node %s: %s %r",
+                node_name,
+                type(exc).__name__,
+                exc,
+            )
             return []
 
     def _parse_topic(self, topic: dict[str, Any], fallback_node: str) -> ContentItem | None:

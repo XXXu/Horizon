@@ -42,7 +42,7 @@
     },
     "v2ex": {
       "enabled": true,
-      "nodes": ["ai", "programmer", "create", "share", "jobs", "python", "javascript", "go"],
+      "nodes": ["openai", "programmer", "create", "share", "jobs", "python", "javascript", "go"],
       "fetch_limit": 20,
       "min_replies": 0
     },

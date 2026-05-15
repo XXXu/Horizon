@@ -7,6 +7,13 @@ from src.models import SourceType, V2EXConfig
 from src.scrapers.v2ex import V2EX_HEADERS, V2EXScraper
 
 
+def test_v2ex_default_nodes_use_existing_ai_related_node() -> None:
+    config = V2EXConfig()
+
+    assert "openai" in config.nodes
+    assert "ai" not in config.nodes
+
+
 def _topic_payload(created: datetime | None = None, replies: int = 3) -> list[dict]:
     created_at = created or datetime.now(timezone.utc)
     return [
@@ -81,3 +88,18 @@ def test_v2ex_http_error_degrades_to_empty_list() -> None:
     asyncio.run(client.aclose())
 
     assert items == []
+
+
+def test_v2ex_http_error_logs_status_and_body(caplog) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, json={"message": "Object Not Found"})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    scraper = V2EXScraper(V2EXConfig(enabled=True, nodes=["ai"]), client)
+
+    items = asyncio.run(scraper.fetch(datetime.now(timezone.utc) - timedelta(hours=1)))
+    asyncio.run(client.aclose())
+
+    assert items == []
+    assert "status=404" in caplog.text
+    assert "Object Not Found" in caplog.text

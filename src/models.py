@@ -101,7 +101,7 @@ class V2EXConfig(BaseModel):
     enabled: bool = False
     nodes: List[str] = Field(
         default_factory=lambda: [
-            "ai",
+            "openai",
             "programmer",
             "create",
             "share",
