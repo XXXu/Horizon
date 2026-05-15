@@ -30,7 +30,7 @@ def build_jianwei_artifact(item: ContentItem, *, persona_slug: str, model: str) 
         },
         "item": {
             "external_id": item.id,
-            "title": item.title,
+            "title": item.metadata.get("title_zh") or item.title,
             "url": str(item.url),
             "content": item.content,
             "author": item.author,
@@ -40,8 +40,11 @@ def build_jianwei_artifact(item: ContentItem, *, persona_slug: str, model: str) 
         "analysis": {
             "persona_slug": persona_slug,
             "score": float(item.ai_score or 0),
-            "summary": item.ai_summary or item.title,
-            "why_it_matters": item.ai_reason or item.ai_summary or item.title,
+            "summary": item.metadata.get("whats_new_zh") or item.ai_summary or item.title,
+            "why_it_matters": item.metadata.get("why_it_matters_zh")
+            or item.ai_reason
+            or item.ai_summary
+            or item.title,
             "opportunities": item.ai_opportunities,
             "risks": item.ai_risks,
             "tags": item.ai_tags,

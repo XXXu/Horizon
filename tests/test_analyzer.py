@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import src.ai.analyzer as analyzer_module
+from src.ai.prompts import CONTENT_ANALYSIS_SYSTEM, CONTENT_ANALYSIS_USER
 from src.ai.analyzer import ContentAnalyzer
 from src.models import ContentItem, SourceType
 
@@ -120,3 +121,20 @@ def test_analyze_item_sets_opportunities_and_risks() -> None:
     assert item.ai_score == 8.0
     assert item.ai_opportunities == ["围绕垂直场景做更轻量的替代品"]
     assert item.ai_risks == ["通用平台可能快速覆盖该能力"]
+
+
+def test_content_analysis_prompt_requires_chinese_output() -> None:
+    prompt_text = CONTENT_ANALYSIS_SYSTEM + CONTENT_ANALYSIS_USER
+
+    assert "「见微」是一个面向独立开发者和 AI 产品创业者的情报筛选产品" in prompt_text
+    assert "简体中文" in prompt_text
+    assert "English source" in prompt_text
+    assert "不要直接复制英文句子" in prompt_text
+    assert "不要把「关键信号」写成" in prompt_text
+    assert "不要把「摘要」写成创业建议" in prompt_text
+    assert "不要把「可做机会」写成空泛建议" in prompt_text
+    assert "reason: 「关键信号」" in prompt_text
+    assert "summary: 「摘要」" in prompt_text
+    assert "opportunities: 「可做机会」" in prompt_text
+    assert "risks: 「风险提醒」" in prompt_text
+    assert "tags: 「标签」" in prompt_text

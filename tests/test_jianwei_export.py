@@ -32,6 +32,19 @@ def _make_item() -> ContentItem:
     return item
 
 
+def test_build_jianwei_artifact_prefers_chinese_enrichment_fields() -> None:
+    item = _make_item()
+    item.metadata["title_zh"] = "AI 产品信号"
+    item.metadata["whats_new_zh"] = "这是一个值得关注的 AI 产品变化。"
+    item.metadata["why_it_matters_zh"] = "它说明垂直 AI 工具仍有创业机会。"
+
+    artifact = build_jianwei_artifact(item, persona_slug="indie-maker", model="test-model")
+
+    assert artifact["item"]["title"] == "AI 产品信号"
+    assert artifact["analysis"]["summary"] == "这是一个值得关注的 AI 产品变化。"
+    assert artifact["analysis"]["why_it_matters"] == "它说明垂直 AI 工具仍有创业机会。"
+
+
 def test_build_jianwei_artifact() -> None:
     artifact = build_jianwei_artifact(_make_item(), persona_slug="indie-maker", model="test-model")
 
