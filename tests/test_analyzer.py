@@ -94,3 +94,29 @@ def test_analyze_batch_concurrent_preserves_order(monkeypatch):
     result = asyncio.run(analyzer.analyze_batch(items))
 
     assert [item.id for item in result] == [item.id for item in items]
+
+
+def test_analyze_item_sets_opportunities_and_risks() -> None:
+    client = SimpleNamespace()
+
+    async def fake_complete(**_):
+        return """
+        {
+          "score": 8.0,
+          "reason": "开发者工具需求明确。",
+          "summary": "一个新的 AI 开发者工具发布。",
+          "opportunities": ["围绕垂直场景做更轻量的替代品"],
+          "risks": ["通用平台可能快速覆盖该能力"],
+          "tags": ["ai", "developer tools"]
+        }
+        """
+
+    client.complete = fake_complete
+    analyzer = ContentAnalyzer(client)
+    item = _make_item("rss:test:analysis")
+
+    asyncio.run(analyzer._analyze_item(item))
+
+    assert item.ai_score == 8.0
+    assert item.ai_opportunities == ["围绕垂直场景做更轻量的替代品"]
+    assert item.ai_risks == ["通用平台可能快速覆盖该能力"]

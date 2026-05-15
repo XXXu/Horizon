@@ -34,6 +34,8 @@ class ContentItem(BaseModel):
     ai_reason: Optional[str] = None
     ai_summary: Optional[str] = None
     ai_tags: List[str] = Field(default_factory=list)
+    ai_opportunities: List[str] = Field(default_factory=list)
+    ai_risks: List[str] = Field(default_factory=list)
 
 
 class AIProvider(str, Enum):

@@ -55,6 +55,8 @@ class ContentAnalyzer:
                     item.ai_score = 0.0
                     item.ai_reason = "Analysis failed"
                     item.ai_summary = item.title
+                    item.ai_opportunities = []
+                    item.ai_risks = []
                 if throttle_sec > 0 and index < len(items) - 1:
                     await asyncio.sleep(throttle_sec)
             progress.advance(progress_task)
@@ -153,10 +155,14 @@ class ContentAnalyzer:
             item.ai_reason = "Analysis response parse failed"
             item.ai_summary = item.title
             item.ai_tags = []
+            item.ai_opportunities = []
+            item.ai_risks = []
             return
 
         # Update item with analysis results
         item.ai_score = float(result.get("score", 0))
         item.ai_reason = result.get("reason", "")
         item.ai_summary = result.get("summary", item.title)
+        item.ai_opportunities = list(result.get("opportunities", []))
+        item.ai_risks = list(result.get("risks", []))
         item.ai_tags = result.get("tags", [])

@@ -63,6 +63,8 @@ CONTENT_ANALYSIS_USER = """Analyze the following content and provide a JSON resp
 - score (0-10): Importance score
 - reason: Brief explanation for the score (mention discussion quality if comments are provided)
 - summary: One-sentence summary of the content
+- opportunities: 1-3 actionable opportunities for an indie maker or AI product founder
+- risks: 1-3 risks, caveats, or reasons this signal may be hard to act on
 - tags: Relevant topic tags (3-5 tags)
 
 Content:
@@ -78,6 +80,8 @@ Respond with valid JSON only:
   "score": <number>,
   "reason": "<explanation>",
   "summary": "<one-sentence-summary>",
+  "opportunities": ["<opportunity1>", "<opportunity2>"],
+  "risks": ["<risk1>", "<risk2>"],
   "tags": ["<tag1>", "<tag2>", ...]
 }}"""
 

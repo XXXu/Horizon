@@ -22,6 +22,8 @@ def _make_item() -> ContentItem:
     item.ai_score = 8.5
     item.ai_summary = "一个值得关注的 AI 产品信号。"
     item.ai_reason = "它说明垂直 AI 工具仍有机会。"
+    item.ai_opportunities = ["做一个垂直 AI 工作流工具"]
+    item.ai_risks = ["大厂可能快速跟进"]
     item.ai_tags = ["ai", "product"]
     return item
 
@@ -35,6 +37,8 @@ def test_build_jianwei_artifact() -> None:
     assert artifact["item"]["external_id"] == "rss:example:1"
     assert artifact["analysis"]["persona_slug"] == "indie-maker"
     assert artifact["analysis"]["score"] == 8.5
+    assert artifact["analysis"]["opportunities"] == ["做一个垂直 AI 工作流工具"]
+    assert artifact["analysis"]["risks"] == ["大厂可能快速跟进"]
     assert artifact["analysis"]["tags"] == ["ai", "product"]
 
 
