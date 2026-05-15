@@ -89,7 +89,6 @@ class RSSScraper(BaseScraper):
                 # Generate unique ID from feed URL and entry ID
                 feed_id = str(source.url).split("//")[1].replace("/", "_")
                 entry_id = entry.get("id", entry.get("link", ""))
-                unique_id = f"{feed_id}:{hash(entry_id)}"
 
                 # Extract content
                 content = self._extract_content(entry)

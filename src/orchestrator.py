@@ -18,6 +18,7 @@ from .scrapers.rss import RSSScraper
 from .scrapers.reddit import RedditScraper
 from .scrapers.telegram import TelegramScraper
 from .scrapers.twitter import TwitterScraper
+from .scrapers.v2ex import V2EXScraper
 from .ai.client import create_ai_client
 from .ai.analyzer import ContentAnalyzer
 from .ai.summarizer import DailySummarizer
@@ -246,6 +247,11 @@ class HorizonOrchestrator:
             if self.config.sources.hackernews.enabled:
                 hn_scraper = HackerNewsScraper(self.config.sources.hackernews, client)
                 tasks.append(self._fetch_with_progress("Hacker News", hn_scraper, since))
+
+            # V2EX
+            if self.config.sources.v2ex.enabled:
+                v2ex_scraper = V2EXScraper(self.config.sources.v2ex, client)
+                tasks.append(self._fetch_with_progress("V2EX", v2ex_scraper, since))
 
             # RSS feeds
             if self.config.sources.rss:

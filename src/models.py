@@ -14,6 +14,7 @@ class SourceType(str, Enum):
     REDDIT = "reddit"
     TELEGRAM = "telegram"
     TWITTER = "twitter"
+    V2EX = "v2ex"
 
 
 class ContentItem(BaseModel):
@@ -86,6 +87,26 @@ class HackerNewsConfig(BaseModel):
     min_score: int = 100
 
 
+class V2EXConfig(BaseModel):
+    """V2EX public topic configuration."""
+
+    enabled: bool = False
+    nodes: List[str] = Field(
+        default_factory=lambda: [
+            "ai",
+            "programmer",
+            "create",
+            "share",
+            "jobs",
+            "python",
+            "javascript",
+            "go",
+        ]
+    )
+    fetch_limit: int = 20
+    min_replies: int = 0
+
+
 class RSSSourceConfig(BaseModel):
     """RSS feed source configuration."""
 
@@ -152,6 +173,7 @@ class SourcesConfig(BaseModel):
 
     github: List[GitHubSourceConfig] = Field(default_factory=list)
     hackernews: HackerNewsConfig = Field(default_factory=HackerNewsConfig)
+    v2ex: V2EXConfig = Field(default_factory=V2EXConfig)
     rss: List[RSSSourceConfig] = Field(default_factory=list)
     reddit: RedditConfig = Field(default_factory=RedditConfig)
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)

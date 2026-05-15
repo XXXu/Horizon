@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import re
 from datetime import datetime, timezone
 from typing import Any, List, Optional
 

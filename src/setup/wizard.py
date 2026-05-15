@@ -1,9 +1,7 @@
 """Interactive setup wizard for Horizon configuration."""
 
-import json
 import os
 import sys
-from pathlib import Path
 from typing import Dict, List, Optional
 
 from dotenv import load_dotenv
@@ -16,7 +14,7 @@ from ..models import (
     AIConfig, AIProvider, Config, FilteringConfig, SourcesConfig,
     GitHubSourceConfig, HackerNewsConfig, RSSSourceConfig,
     RedditConfig, RedditSubredditConfig, RedditUserConfig,
-    TelegramConfig, TelegramChannelConfig,
+    TelegramConfig, TelegramChannelConfig, V2EXConfig,
 )
 from ..storage.manager import StorageManager
 from .presets import load_presets, match_sources
@@ -91,7 +89,7 @@ def configure_ai() -> Optional[AIConfig]:
         "Output languages (comma-separated)",
         default="zh,en",
     )
-    lang_list = [l.strip() for l in languages.split(",") if l.strip()]
+    lang_list = [language.strip() for language in languages.split(",") if language.strip()]
 
     return AIConfig(
         provider=AIProvider(provider),
@@ -201,7 +199,7 @@ def build_config(
     reddit_subreddits = []
     reddit_users = []
     telegram_channels = []
-    hn_enabled = False
+    v2ex_nodes = []
 
     for src in selected_sources:
         src_type = src.get("type", "")
@@ -243,8 +241,8 @@ def build_config(
                 channel=cfg.get("channel", ""),
                 fetch_limit=cfg.get("fetch_limit", 20),
             ))
-        elif src_type == "hackernews":
-            hn_enabled = True
+        elif src_type == "v2ex":
+            v2ex_nodes.extend(cfg.get("nodes", []))
 
     # Always include HackerNews as a universal source
     hn_config = HackerNewsConfig(
@@ -265,9 +263,15 @@ def build_config(
         channels=telegram_channels,
     )
 
+    v2ex_config = V2EXConfig(
+        enabled=bool(v2ex_nodes),
+        nodes=v2ex_nodes or V2EXConfig().nodes,
+    )
+
     sources = SourcesConfig(
         github=github_sources,
         hackernews=hn_config,
+        v2ex=v2ex_config,
         rss=rss_sources,
         reddit=reddit_config,
         telegram=telegram_config,
@@ -335,6 +339,12 @@ def merge_configs(new_config: Config, existing_config: Config) -> Config:
         new_subs.append(sub)
     new_subs.extend(existing_subs.values())
     merged.sources.reddit.subreddits = new_subs
+
+    # Merge V2EX nodes
+    existing_v2ex_nodes = list(existing_config.sources.v2ex.nodes or [])
+    merged_nodes = list(dict.fromkeys([*merged.sources.v2ex.nodes, *existing_v2ex_nodes]))
+    merged.sources.v2ex.nodes = merged_nodes
+    merged.sources.v2ex.enabled = merged.sources.v2ex.enabled or existing_config.sources.v2ex.enabled
 
     return merged
 
@@ -440,6 +450,8 @@ def _count_sources(config: Config) -> int:
     count += len([s for s in config.sources.github if s.enabled])
     if config.sources.hackernews.enabled:
         count += 1
+    if config.sources.v2ex.enabled:
+        count += len(config.sources.v2ex.nodes or [])
     count += len([s for s in config.sources.rss if s.enabled])
     if config.sources.reddit.enabled:
         count += len(config.sources.reddit.subreddits or [])
