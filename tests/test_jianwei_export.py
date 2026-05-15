@@ -1,6 +1,10 @@
 from datetime import datetime, timezone
 
-from src.integrations.jianwei import build_jianwei_artifact, export_jianwei_artifacts
+from src.integrations.jianwei import (
+    artifact_date_for_display_timezone,
+    build_jianwei_artifact,
+    export_jianwei_artifacts,
+)
 from src.models import ContentItem, SourceType
 
 
@@ -53,3 +57,9 @@ def test_export_jianwei_artifacts(tmp_path) -> None:
     assert len(paths) == 1
     assert paths[0].exists()
     assert paths[0].read_text(encoding="utf-8").count("AI Product Signal") == 1
+
+
+def test_artifact_date_uses_china_timezone() -> None:
+    utc_evening = datetime(2026, 5, 15, 17, 30, tzinfo=timezone.utc)
+
+    assert artifact_date_for_display_timezone(utc_evening) == "2026-05-16"

@@ -4,7 +4,7 @@ import argparse
 import asyncio
 import json
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +16,7 @@ from src.orchestrator import HorizonOrchestrator
 from src.storage.manager import StorageManager
 
 console = Console()
+DISPLAY_TIMEZONE = timezone(timedelta(hours=8), name="Asia/Shanghai")
 
 
 def build_jianwei_artifact(item: ContentItem, *, persona_slug: str, model: str) -> dict[str, Any]:
@@ -86,7 +87,7 @@ async def run_export(args: argparse.Namespace) -> list[Path]:
     important_items = _filter_items(analyzed_items, config, args.min_score)
     important_items = important_items[: args.limit]
 
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = artifact_date_for_display_timezone()
     output_dir = Path(args.output_dir) / today / args.persona_slug
     paths = export_jianwei_artifacts(
         important_items,
@@ -96,6 +97,15 @@ async def run_export(args: argparse.Namespace) -> list[Path]:
     )
     console.print(f"💾 Exported {len(paths)} Jianwei artifacts to: {output_dir}")
     return paths
+
+
+def artifact_date_for_display_timezone(now: datetime | None = None) -> str:
+    """Return artifact date using the China-facing product timezone."""
+
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    return current.astimezone(DISPLAY_TIMEZONE).strftime("%Y-%m-%d")
 
 
 def main() -> None:
