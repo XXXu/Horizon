@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
-from typing import Any, List
+from typing import Any, List, Optional
 
 import feedparser
 import httpx
@@ -34,6 +34,7 @@ class CnTechSource:
     source_type: SourceType
     category: str
     kind: str = "rss"
+    link_prefix: Optional[str] = None
 
 
 CN_TECH_SOURCES: dict[str, CnTechSource] = {
@@ -71,6 +72,28 @@ CN_TECH_SOURCES: dict[str, CnTechSource] = {
         name="量子位",
         url="https://www.qbitai.com/feed",
         source_type=SourceType.QBITAI,
+        category="ai",
+    ),
+    "tmtpost": CnTechSource(
+        key="tmtpost",
+        name="钛媒体",
+        url="https://www.tmtpost.com/rss",
+        source_type=SourceType.TMTPOST,
+        category="business-tech",
+    ),
+    "huggingface_zh": CnTechSource(
+        key="huggingface_zh",
+        name="Hugging Face 中文",
+        url="https://huggingface.co/blog/feed.xml",
+        source_type=SourceType.HUGGINGFACE_ZH,
+        category="ai-open-source",
+        link_prefix="https://huggingface.co/blog/zh/",
+    ),
+    "jiqizhixin": CnTechSource(
+        key="jiqizhixin",
+        name="机器之心",
+        url="http://feedmaker.kindle4rss.com/feeds/almosthuman2014.weixin.xml",
+        source_type=SourceType.JIQIZHIXIN,
         category="ai",
     ),
 }
@@ -128,6 +151,8 @@ class CnTechScraper(BaseScraper):
 
             entry_id = entry.get("id", entry.get("guid", entry.get("link", "")))
             url = entry.get("link", source.url)
+            if source.link_prefix and not str(url).startswith(source.link_prefix):
+                continue
             item = ContentItem(
                 id=self._generate_id(source.source_type.value, "article", str(hash(entry_id))),
                 source_type=source.source_type,

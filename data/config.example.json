@@ -41,14 +41,14 @@
       "min_score": 100
     },
     "v2ex": {
-      "enabled": false,
+      "enabled": true,
       "nodes": ["ai", "programmer", "create", "share", "jobs", "python", "javascript", "go"],
       "fetch_limit": 20,
       "min_replies": 0
     },
     "cn_tech": {
       "enabled": true,
-      "sources": ["36kr", "infoq_cn", "juejin", "geekpark", "qbitai"],
+      "sources": ["36kr", "juejin", "qbitai", "tmtpost", "huggingface_zh", "jiqizhixin"],
       "fetch_limit": 20
     },
     "rss": [

@@ -57,6 +57,79 @@ def test_cn_tech_fetches_rss_sources():
     assert items[0].metadata["tags"] == ["AI"]
 
 
+def test_cn_tech_fetches_new_rss_media_sources():
+    seen_urls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen_urls.append(str(request.url))
+        return httpx.Response(
+            200,
+            text=_rss(
+                "AI 原生应用进入商业化窗口",
+                "https://www.tmtpost.com/8000000.html",
+                "Fri, 15 May 2026 08:00:00 GMT",
+            ),
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    scraper = CnTechScraper(
+        CnTechConfig(enabled=True, sources=["tmtpost", "jiqizhixin"], fetch_limit=10),
+        client,
+    )
+
+    items = asyncio.run(scraper.fetch(datetime(2026, 5, 15, tzinfo=timezone.utc)))
+    asyncio.run(client.aclose())
+
+    assert seen_urls == [
+        CN_TECH_SOURCES["tmtpost"].url,
+        CN_TECH_SOURCES["jiqizhixin"].url,
+    ]
+    assert [item.source_type for item in items] == [
+        SourceType.TMTPOST,
+        SourceType.JIQIZHIXIN,
+    ]
+    assert items[0].metadata["source_name"] == "钛媒体"
+    assert items[1].metadata["source_name"] == "机器之心"
+
+
+def test_cn_tech_filters_huggingface_feed_to_chinese_blog_posts():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            text="""<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Hugging Face Blog</title>
+    <item>
+      <title>中文模型部署实践</title>
+      <link>https://huggingface.co/blog/zh/chinese-model-serving</link>
+      <pubDate>Fri, 15 May 2026 08:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>English platform update</title>
+      <link>https://huggingface.co/blog/platform-update</link>
+      <pubDate>Fri, 15 May 2026 08:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
+""",
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    scraper = CnTechScraper(
+        CnTechConfig(enabled=True, sources=["huggingface_zh"], fetch_limit=10),
+        client,
+    )
+
+    items = asyncio.run(scraper.fetch(datetime(2026, 5, 15, tzinfo=timezone.utc)))
+    asyncio.run(client.aclose())
+
+    assert len(items) == 1
+    assert items[0].source_type == SourceType.HUGGINGFACE_ZH
+    assert items[0].title == "中文模型部署实践"
+    assert str(items[0].url) == "https://huggingface.co/blog/zh/chinese-model-serving"
+
+
 def test_cn_tech_fetches_juejin_articles():
     requests = []
 

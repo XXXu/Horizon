@@ -100,10 +100,11 @@ def test_get_effective_config_accepts_cn_tech_source_filter(tmp_path: Path) -> N
     assert result["config"]["sources"]["cn_tech"]["enabled"] is True
     assert result["config"]["sources"]["cn_tech"]["sources"] == [
         "36kr",
-        "infoq_cn",
         "juejin",
-        "geekpark",
         "qbitai",
+        "tmtpost",
+        "huggingface_zh",
+        "jiqizhixin",
     ]
     assert result["config"]["sources"]["github"] == []
     assert result["config"]["sources"]["hackernews"]["enabled"] is False

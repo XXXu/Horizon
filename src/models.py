@@ -20,6 +20,9 @@ class SourceType(str, Enum):
     JUEJIN = "juejin"
     GEEKPARK = "geekpark"
     QBITAI = "qbitai"
+    TMTPOST = "tmtpost"
+    HUGGINGFACE_ZH = "huggingface_zh"
+    JIQIZHIXIN = "jiqizhixin"
 
 
 class ContentItem(BaseModel):
@@ -117,7 +120,14 @@ class CnTechConfig(BaseModel):
 
     enabled: bool = True
     sources: List[str] = Field(
-        default_factory=lambda: ["36kr", "infoq_cn", "juejin", "geekpark", "qbitai"]
+        default_factory=lambda: [
+            "36kr",
+            "juejin",
+            "qbitai",
+            "tmtpost",
+            "huggingface_zh",
+            "jiqizhixin",
+        ]
     )
     fetch_limit: int = 20
 
