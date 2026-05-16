@@ -11,6 +11,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 function Read-DotEnv {
     param([string]$Path)
@@ -109,19 +113,19 @@ $RemoteWebDir = Get-ConfigValue `
     -DefaultValue "/root/workspace/vertical_ai_news/jianwei_web"
 
 if (-not $RemoteHost) {
-    throw "请通过 -RemoteHost、环境变量 JIANWEI_REMOTE_HOST 或 .env 中的 JIANWEI_REMOTE_HOST 指定服务器，例如：root@129.204.144.110"
+    throw "Remote host is required. Set -RemoteHost, JIANWEI_REMOTE_HOST, or JIANWEI_REMOTE_HOST in .env. Example: root@129.204.144.110"
 }
 
 if ([string]::IsNullOrWhiteSpace($PersonaSlug)) {
-    throw "PersonaSlug 不能为空"
+    throw "PersonaSlug cannot be empty"
 }
 
 if ([string]::IsNullOrWhiteSpace($RemoteArtifactsRoot) -or $RemoteArtifactsRoot -eq "/") {
-    throw "RemoteArtifactsRoot 不能为空，也不能是根目录 /"
+    throw "RemoteArtifactsRoot cannot be empty or /"
 }
 
 if ([string]::IsNullOrWhiteSpace($RemoteWebDir) -or $RemoteWebDir -eq "/") {
-    throw "RemoteWebDir 不能为空，也不能是根目录 /"
+    throw "RemoteWebDir cannot be empty or /"
 }
 
 $RemoteArtifactsRoot = $RemoteArtifactsRoot.TrimEnd("/")
@@ -132,7 +136,7 @@ try {
     $ArtifactDate = (& $PythonPath -c "from src.integrations.jianwei import artifact_date_for_display_timezone; print(artifact_date_for_display_timezone())").Trim()
     $ArtifactDir = Join-Path $RootDir "data\jianwei_artifacts\$ArtifactDate\$PersonaSlug"
     if (Test-Path $ArtifactDir) {
-        Write-Host "清理本地旧 artifact 目录：$ArtifactDir"
+        Write-Host "Cleaning local artifact directory: $ArtifactDir"
         Remove-Item -LiteralPath $ArtifactDir -Recurse -Force
     }
 
@@ -147,46 +151,52 @@ try {
         $exportArgs += @("--min-score", $MinScore)
     }
 
-    Write-Host "开始导出见微 artifacts..."
+    Write-Host "Exporting Jianwei artifacts..."
     & $PythonPath @exportArgs
     if ($LASTEXITCODE -ne 0) {
-        throw "Horizon 导出失败，退出码：$LASTEXITCODE"
+        throw "Horizon export failed, exit code: $LASTEXITCODE"
     }
 
     if (-not (Test-Path $ArtifactDir -PathType Container)) {
-        throw "未找到 artifact 目录：$ArtifactDir"
+        throw "Artifact directory not found: $ArtifactDir"
     }
 
     $ArtifactFiles = @(Get-ChildItem -Path $ArtifactDir -Filter "*.json" -File)
     if ($ArtifactFiles.Count -eq 0) {
-        throw "artifact 目录中没有 JSON 文件：$ArtifactDir"
+        throw "No JSON files found in artifact directory: $ArtifactDir"
     }
 
     $RemoteDateDir = "$RemoteArtifactsRoot/$ArtifactDate"
-    Write-Host "准备上传 $($ArtifactFiles.Count) 个 JSON 到 ${RemoteHost}:$RemoteDateDir/$PersonaSlug"
+    Write-Host "Uploading $($ArtifactFiles.Count) JSON files to ${RemoteHost}:$RemoteDateDir/$PersonaSlug"
     ssh $RemoteHost "rm -rf '$RemoteDateDir/$PersonaSlug' && mkdir -p '$RemoteDateDir'"
     if ($LASTEXITCODE -ne 0) {
-        throw "服务器目录创建失败，退出码：$LASTEXITCODE"
+        throw "Failed to prepare remote directory, exit code: $LASTEXITCODE"
     }
 
-    scp -r $ArtifactDir "${RemoteHost}:$RemoteDateDir/"
+    scp -r $ArtifactDir "${RemoteHost}:$RemoteDateDir/$PersonaSlug"
     if ($LASTEXITCODE -ne 0) {
-        throw "artifact 上传失败，退出码：$LASTEXITCODE"
+        throw "Artifact upload failed, exit code: $LASTEXITCODE"
+    }
+
+    $VerifyRemoteArtifacts = "test -d '$RemoteDateDir/$PersonaSlug' && find '$RemoteDateDir/$PersonaSlug' -maxdepth 1 -type f -name '*.json' -print -quit | grep -q ."
+    ssh $RemoteHost $VerifyRemoteArtifacts
+    if ($LASTEXITCODE -ne 0) {
+        throw "Remote artifact verification failed: $RemoteDateDir/$PersonaSlug"
     }
 
     if (-not $SkipRemoteImport) {
-        Write-Host "开始在服务器导入 artifact..."
+        Write-Host "Importing artifacts on server..."
         ssh $RemoteHost "cd '$RemoteWebDir' && bash ./bin/import_uploaded_artifacts.sh '$ArtifactDate'"
         if ($LASTEXITCODE -ne 0) {
-            throw "服务器导入失败，退出码：$LASTEXITCODE"
+            throw "Server import failed, exit code: $LASTEXITCODE"
         }
     }
     else {
-        Write-Host "已跳过服务器导入。服务器手动导入命令："
+        Write-Host "Skipped server import. Manual server import command:"
         Write-Host "cd $RemoteWebDir && bash ./bin/import_uploaded_artifacts.sh $ArtifactDate"
     }
 
-    Write-Host "完成：本地导出、上传、服务器导入流程已结束。"
+    Write-Host "Done: local export, upload, and server import completed."
 }
 finally {
     Pop-Location
