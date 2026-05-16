@@ -44,6 +44,7 @@ data/config.json.bak
 data/seen.json
 data/summaries/*.md
 data/subscribers.json
+data/jianwei_artifacts/
 data/mcp-runs/
 data/mcp.secrets.json
 data/mcp-secrets.json
