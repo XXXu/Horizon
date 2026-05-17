@@ -57,6 +57,31 @@ def test_cn_tech_fetches_rss_sources():
     assert items[0].metadata["tags"] == ["AI"]
 
 
+def test_cn_tech_rss_item_id_is_stable():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            text=_rss(
+                "OpenAI再次重组高管团队：布罗克曼正式接管产品",
+                "https://36kr.com/newsflashes/3811623947476489?f=rss",
+                "Fri, 16 May 2026 07:29:15 GMT",
+            ),
+        )
+
+    async def fetch_once() -> str:
+        client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        scraper = CnTechScraper(CnTechConfig(enabled=True, sources=["36kr"], fetch_limit=10), client)
+        items = await scraper.fetch(datetime(2026, 5, 16, tzinfo=timezone.utc))
+        await client.aclose()
+        return items[0].id
+
+    first_id = asyncio.run(fetch_once())
+    second_id = asyncio.run(fetch_once())
+
+    assert first_id == second_id
+    assert first_id.startswith("36kr:article:")
+
+
 def test_cn_tech_fetches_new_rss_media_sources():
     seen_urls = []
 

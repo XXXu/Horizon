@@ -149,12 +149,16 @@ class CnTechScraper(BaseScraper):
             if not published_at or published_at < since:
                 continue
 
-            entry_id = entry.get("id", entry.get("guid", entry.get("link", "")))
             url = entry.get("link", source.url)
             if source.link_prefix and not str(url).startswith(source.link_prefix):
                 continue
+            entry_id = str(entry.get("id") or entry.get("guid") or url)
             item = ContentItem(
-                id=self._generate_id(source.source_type.value, "article", str(hash(entry_id))),
+                id=self._generate_id(
+                    source.source_type.value,
+                    "article",
+                    self._stable_id_part(entry_id),
+                ),
                 source_type=source.source_type,
                 title=entry.get("title", "Untitled"),
                 url=url,

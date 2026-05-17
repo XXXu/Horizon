@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from datetime import datetime
+import hashlib
 from typing import List
 import httpx
 
@@ -45,3 +46,8 @@ class BaseScraper(ABC):
             str: Unique ID in format {source}:{subtype}:{native_id}
         """
         return f"{source_type}:{subtype}:{native_id}"
+
+    def _stable_id_part(self, value: str) -> str:
+        """Generate a deterministic, compact ID component from source-provided values."""
+
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
